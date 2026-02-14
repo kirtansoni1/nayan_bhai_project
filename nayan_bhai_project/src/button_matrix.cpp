@@ -28,7 +28,7 @@ MatrixEventCallback g_callback = nullptr;
 bool prevPressed[ROWS][COLS] = {};
 uint32_t lastChangeMs[ROWS][COLS] = {};
 
-MatrixEvent map_event(uint8_t row, uint8_t col) {
+MatrixEvent map_event(uint8_t row, uint8_t col, bool pressed) {
   // Mapping requested by user:
   // row0_col0 -> s_m1_cw
   // row1_col0 -> s_m1_ccw
@@ -36,12 +36,12 @@ MatrixEvent map_event(uint8_t row, uint8_t col) {
   // row1_col1 -> s_m2_ccw
   // row0_col2 -> s_m3_cw
   // row1_col2 -> s_m3_ccw
-  if (row == 0 && col == 0) return MatrixEvent::S_M1_CW;
-  if (row == 1 && col == 0) return MatrixEvent::S_M1_CCW;
-  if (row == 0 && col == 1) return MatrixEvent::S_M2_CW;
-  if (row == 1 && col == 1) return MatrixEvent::S_M2_CCW;
-  if (row == 0 && col == 2) return MatrixEvent::S_M3_CW;
-  if (row == 1 && col == 2) return MatrixEvent::S_M3_CCW;
+  if (row == 0 && col == 0) return pressed ? MatrixEvent::S_M1_CW : MatrixEvent::S_M1_STOP;
+  if (row == 1 && col == 0) return pressed ? MatrixEvent::S_M1_CCW : MatrixEvent::S_M1_STOP;
+  if (row == 0 && col == 1) return pressed ? MatrixEvent::S_M2_CW : MatrixEvent::S_M2_STOP;
+  if (row == 1 && col == 1) return pressed ? MatrixEvent::S_M2_CCW : MatrixEvent::S_M2_STOP;
+  if (row == 0 && col == 2) return pressed ? MatrixEvent::S_M3_CW : MatrixEvent::S_M3_STOP;
+  if (row == 1 && col == 2) return pressed ? MatrixEvent::S_M3_CCW : MatrixEvent::S_M3_STOP;
   return MatrixEvent::NONE;
 }
 
@@ -72,9 +72,8 @@ void scan_matrix_and_dispatch() {
         prevPressed[row][col] = pressed;
         lastChangeMs[row][col] = now;
 
-        // Trigger only on key-press edge to avoid duplicates.
-        if (pressed && g_callback != nullptr) {
-          const MatrixEvent event = map_event(row, col);
+        if (g_callback != nullptr) {
+          const MatrixEvent event = map_event(row, col, pressed);
           if (event != MatrixEvent::NONE) {
             g_callback(event);
           }

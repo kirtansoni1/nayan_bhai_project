@@ -32,6 +32,11 @@ void stepper_run_ms(uint8_t motor_number, uint32_t time_ms, Direction direction)
 void stepper_run_steps(uint8_t motor_number, int32_t steps, Direction direction);
 
 /**
+ * Runs a motor continuously until explicitly stopped (non-blocking).
+ */
+void stepper_run_infinite(uint8_t motor_number, Direction direction);
+
+/**
  * Immediately stops one stepper.
  */
 void stepper_stop(uint8_t motor_number);

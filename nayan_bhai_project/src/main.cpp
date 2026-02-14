@@ -6,27 +6,34 @@
 #include "stepper_motor.h"
 
 namespace {
-constexpr int32_t JOG_STEPS_PER_KEY = 200;
-
 void on_matrix_event(MatrixEvent event) {
   switch (event) {
     case MatrixEvent::S_M1_CW:
-      stepper_run_steps(1, JOG_STEPS_PER_KEY, Direction::CW);
+      stepper_run_infinite(1, Direction::CW);
       break;
     case MatrixEvent::S_M1_CCW:
-      stepper_run_steps(1, JOG_STEPS_PER_KEY, Direction::CCW);
+      stepper_run_infinite(1, Direction::CCW);
+      break;
+    case MatrixEvent::S_M1_STOP:
+      stepper_stop(1);
       break;
     case MatrixEvent::S_M2_CW:
-      stepper_run_steps(2, JOG_STEPS_PER_KEY, Direction::CW);
+      stepper_run_infinite(2, Direction::CW);
       break;
     case MatrixEvent::S_M2_CCW:
-      stepper_run_steps(2, JOG_STEPS_PER_KEY, Direction::CCW);
+      stepper_run_infinite(2, Direction::CCW);
+      break;
+    case MatrixEvent::S_M2_STOP:
+      stepper_stop(2);
       break;
     case MatrixEvent::S_M3_CW:
-      stepper_run_steps(3, JOG_STEPS_PER_KEY, Direction::CW);
+      stepper_run_infinite(3, Direction::CW);
       break;
     case MatrixEvent::S_M3_CCW:
-      stepper_run_steps(3, JOG_STEPS_PER_KEY, Direction::CCW);
+      stepper_run_infinite(3, Direction::CCW);
+      break;
+    case MatrixEvent::S_M3_STOP:
+      stepper_stop(3);
       break;
     default:
       break;

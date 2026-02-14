@@ -6,10 +6,13 @@ enum class MatrixEvent : uint8_t {
   NONE = 0,
   S_M1_CW,
   S_M1_CCW,
+  S_M1_STOP,
   S_M2_CW,
   S_M2_CCW,
+  S_M2_STOP,
   S_M3_CW,
   S_M3_CCW,
+  S_M3_STOP,
 };
 
 using MatrixEventCallback = void (*)(MatrixEvent event);

@@ -12,6 +12,7 @@ AccelStepper steppers[MOTOR_COUNT] = {
 struct StepperRuntime {
   bool timedRunActive;
   uint32_t timedRunEndMs;
+  bool infiniteRunActive;
 };
 
 StepperRuntime runtime[MOTOR_COUNT] = {};
@@ -43,7 +44,11 @@ void stepper_service_task(void *parameter) {
         steppers[index].stop();
         runtime[index].timedRunActive = false;
       }
-      steppers[index].run();
+      if (runtime[index].infiniteRunActive) {
+        steppers[index].runSpeed();
+      } else {
+        steppers[index].run();
+      }
     }
     taskEXIT_CRITICAL(&stepperMux);
 
@@ -103,6 +108,7 @@ void stepper_run_ms(uint8_t motor_number, uint32_t time_ms, Direction direction)
   const int32_t farTargetOffset = (direction == Direction::CW) ? 2000000000L : -2000000000L;
 
   taskENTER_CRITICAL(&stepperMux);
+  runtime[index].infiniteRunActive = false;
   steppers[index].move(farTargetOffset);
   runtime[index].timedRunActive = true;
   runtime[index].timedRunEndMs = millis() + time_ms;
@@ -118,8 +124,24 @@ void stepper_run_steps(uint8_t motor_number, int32_t steps, Direction direction)
   const int32_t signedSteps = (direction == Direction::CW) ? steps : -steps;
 
   taskENTER_CRITICAL(&stepperMux);
+  runtime[index].infiniteRunActive = false;
   runtime[index].timedRunActive = false;
   steppers[index].move(signedSteps);
+  taskEXIT_CRITICAL(&stepperMux);
+}
+
+void stepper_run_infinite(uint8_t motor_number, Direction direction) {
+  if (!is_valid_motor(motor_number)) {
+    return;
+  }
+
+  const uint8_t index = idx_from_motor(motor_number);
+  const float signedSpeed = (direction == Direction::CW) ? g_maxSpeed : -g_maxSpeed;
+
+  taskENTER_CRITICAL(&stepperMux);
+  runtime[index].timedRunActive = false;
+  runtime[index].infiniteRunActive = true;
+  steppers[index].setSpeed(signedSpeed);
   taskEXIT_CRITICAL(&stepperMux);
 }
 
@@ -130,6 +152,7 @@ void stepper_stop(uint8_t motor_number) {
 
   const uint8_t index = idx_from_motor(motor_number);
   taskENTER_CRITICAL(&stepperMux);
+  runtime[index].infiniteRunActive = false;
   runtime[index].timedRunActive = false;
   steppers[index].stop();
   taskEXIT_CRITICAL(&stepperMux);
@@ -138,6 +161,7 @@ void stepper_stop(uint8_t motor_number) {
 void stepper_all_stop() {
   taskENTER_CRITICAL(&stepperMux);
   for (uint8_t index = 0; index < MOTOR_COUNT; ++index) {
+    runtime[index].infiniteRunActive = false;
     runtime[index].timedRunActive = false;
     steppers[index].stop();
   }
