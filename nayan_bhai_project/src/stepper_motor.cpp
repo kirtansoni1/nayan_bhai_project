@@ -3,7 +3,7 @@
 #include <AccelStepper.h>
 
 namespace {
-AccelStepper steppers[MOTOR_COUNT] = {
+AccelStepper steppers[STEPPER_MOTOR_COUNT] = {
     AccelStepper(AccelStepper::DRIVER, static_cast<uint8_t>(PIN_S_M1_STEP), static_cast<uint8_t>(PIN_S_M1_DIR)),
     AccelStepper(AccelStepper::DRIVER, static_cast<uint8_t>(PIN_S_M2_STEP), static_cast<uint8_t>(PIN_S_M2_DIR)),
     AccelStepper(AccelStepper::DRIVER, static_cast<uint8_t>(PIN_S_M3_STEP), static_cast<uint8_t>(PIN_S_M3_DIR)),
@@ -15,7 +15,7 @@ struct StepperRuntime {
   bool infiniteRunActive;
 };
 
-StepperRuntime runtime[MOTOR_COUNT] = {};
+StepperRuntime runtime[STEPPER_MOTOR_COUNT] = {};
 
 float g_maxSpeed = STEPPER_DEFAULT_MAX_SPEED;
 float g_acceleration = STEPPER_DEFAULT_ACCEL;
@@ -25,7 +25,7 @@ portMUX_TYPE stepperMux = portMUX_INITIALIZER_UNLOCKED;
 TaskHandle_t stepperTaskHandle = nullptr;
 
 bool is_valid_motor(uint8_t motor_number) {
-  return motor_number >= 1 && motor_number <= MOTOR_COUNT;
+  return motor_number >= 1 && motor_number <= STEPPER_MOTOR_COUNT;
 }
 
 uint8_t idx_from_motor(uint8_t motor_number) {
@@ -39,7 +39,7 @@ void stepper_service_task(void *parameter) {
     const uint32_t now = millis();
 
     taskENTER_CRITICAL(&stepperMux);
-    for (uint8_t index = 0; index < MOTOR_COUNT; ++index) {
+    for (uint8_t index = 0; index < STEPPER_MOTOR_COUNT; ++index) {
       if (runtime[index].timedRunActive && static_cast<int32_t>(now - runtime[index].timedRunEndMs) >= 0) {
         steppers[index].stop();
         runtime[index].timedRunActive = false;
@@ -61,7 +61,7 @@ void stepper_init() {
   pinMode(static_cast<uint8_t>(PIN_S_M_EN), OUTPUT);
   stepper_enable(true);
 
-  for (uint8_t index = 0; index < MOTOR_COUNT; ++index) {
+  for (uint8_t index = 0; index < STEPPER_MOTOR_COUNT; ++index) {
     steppers[index].setMaxSpeed(g_maxSpeed);
     steppers[index].setAcceleration(g_acceleration);
     steppers[index].setCurrentPosition(0);
@@ -88,7 +88,7 @@ void steppr_set_config(float speed, float acceleration, float deceleration) {
   g_deceleration = deceleration;
 
   taskENTER_CRITICAL(&stepperMux);
-  for (uint8_t index = 0; index < MOTOR_COUNT; ++index) {
+  for (uint8_t index = 0; index < STEPPER_MOTOR_COUNT; ++index) {
     steppers[index].setMaxSpeed(g_maxSpeed);
     steppers[index].setAcceleration(g_acceleration);
   }
@@ -160,7 +160,7 @@ void stepper_stop(uint8_t motor_number) {
 
 void stepper_all_stop() {
   taskENTER_CRITICAL(&stepperMux);
-  for (uint8_t index = 0; index < MOTOR_COUNT; ++index) {
+  for (uint8_t index = 0; index < STEPPER_MOTOR_COUNT; ++index) {
     runtime[index].infiniteRunActive = false;
     runtime[index].timedRunActive = false;
     steppers[index].stop();

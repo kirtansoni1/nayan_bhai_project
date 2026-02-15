@@ -17,9 +17,11 @@ constexpr gpio_num_t PIN_DC_3000_RPWM = GPIO_NUM_10;
 constexpr gpio_num_t PIN_DC_3000_LPWM = GPIO_NUM_11;
 constexpr gpio_num_t PIN_DC_3000_EN = GPIO_NUM_42;
 
-// DC 300 RPM (two BTS7960 drivers in parallel control)
-constexpr gpio_num_t PIN_DC_300_RPWM = GPIO_NUM_8;
-constexpr gpio_num_t PIN_DC_300_LPWM = GPIO_NUM_9;
+// DC 300 RPM (independent BTS7960 control)
+constexpr gpio_num_t PIN_DC1_300_RPWM = GPIO_NUM_8;
+constexpr gpio_num_t PIN_DC1_300_LPWM = GPIO_NUM_9;
+constexpr gpio_num_t PIN_DC2_300_RPWM = GPIO_NUM_48;
+constexpr gpio_num_t PIN_DC2_300_LPWM = GPIO_NUM_47;
 constexpr gpio_num_t PIN_DC_300_EN = GPIO_NUM_41;
 
 // 4x4 button matrix (8 wires total)
@@ -38,21 +40,21 @@ constexpr gpio_num_t PIN_BTN_C3 = GPIO_NUM_21;
 constexpr gpio_num_t PIN_SOLENOID_RLY = GPIO_NUM_39;
 
 // -------------------- Shared constants --------------------
-constexpr uint8_t MOTOR_COUNT = 3;
+constexpr uint8_t STEPPER_MOTOR_COUNT = 3;
 
 // Stepper defaults
-constexpr float STEPPER_DEFAULT_MAX_SPEED = 1200.0f;
-constexpr float STEPPER_DEFAULT_ACCEL = 800.0f;
-constexpr float STEPPER_DEFAULT_DECEL = 800.0f;
+constexpr float STEPPER_DEFAULT_MAX_SPEED = 1200.0f; // In steps per second
+constexpr float STEPPER_DEFAULT_ACCEL = 800.0f; // In steps per second squared
+constexpr float STEPPER_DEFAULT_DECEL = 800.0f; // In steps per second squared
 
 // DC PWM defaults
-constexpr uint32_t DC_PWM_FREQ_HZ = 20000;
-constexpr uint8_t DC_PWM_BITS = 8;
-constexpr uint8_t DC_PWM_MAX = 255;
+constexpr uint32_t DC_PWM_FREQ_HZ = 20000; // In Hertz
+constexpr uint8_t DC_PWM_BITS = 8; // Resolution in bits
+constexpr uint8_t DC_PWM_MAX = 255; // Maximum PWM value
 
 // Key scan timing
-constexpr uint32_t KEY_SCAN_PERIOD_MS = 2;
-constexpr uint32_t KEY_DEBOUNCE_MS = 20;
+constexpr uint32_t KEY_SCAN_PERIOD_MS = 2; // In milliseconds
+constexpr uint32_t KEY_DEBOUNCE_MS = 20; // In milliseconds
 
 enum class Direction : uint8_t {
   CW = 0,

@@ -18,9 +18,13 @@ void dc_3000_stop();
 /**
  * 300 RPM group control (non-blocking).
  */
-void dc_300_run(uint8_t speed, Direction direction);
-void dc_300_run_ms(uint32_t time_ms, uint8_t speed, Direction direction);
-void dc_300_stop();
+void dc1_300_run(uint8_t speed, Direction direction);
+void dc1_300_run_ms(uint32_t time_ms, uint8_t speed, Direction direction);
+void dc1_300_stop();
+
+void dc2_300_run(uint8_t speed, Direction direction);
+void dc2_300_run_ms(uint32_t time_ms, uint8_t speed, Direction direction);
+void dc2_300_stop();
 
 /**
  * Stops both DC motor groups.
