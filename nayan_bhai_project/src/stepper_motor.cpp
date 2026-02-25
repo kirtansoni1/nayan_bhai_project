@@ -1,4 +1,5 @@
 #include "stepper_motor.h"
+#include "main.h"
 
 #include <AccelStepper.h>
 
@@ -169,6 +170,35 @@ void stepper_run_steps_blocking(uint8_t motor_number, int32_t steps, Direction d
 
   const uint8_t index = idx_from_motor(motor_number);
   for (;;) {
+    if (g_paused) {
+      // Capture remaining distance before stopping
+      const int32_t remaining = g_noRampMode
+        ? (runtime[index].stepRunTarget - steppers[index].currentPosition())
+        : steppers[index].distanceToGo();
+      // Immediate freeze at current position (no deceleration ramp)
+      steppers[index].setCurrentPosition(steppers[index].currentPosition());
+      runtime[index].stepRunActive = false;
+      runtime[index].timedRunActive = false;
+      runtime[index].infiniteRunActive = false;
+
+      while (g_paused) delay(10);
+
+      // Resume from where we stopped — AccelStepper ramps from 0 to full speed
+      if (remaining != 0) {
+        if (g_noRampMode) {
+          runtime[index].stepRunActive = true;
+          runtime[index].stepRunDirection = (remaining > 0) ? 1 : -1;
+          runtime[index].stepRunTarget = steppers[index].currentPosition() + remaining;
+          steppers[index].setSpeed((remaining > 0) ? g_maxSpeed : -g_maxSpeed);
+        } else {
+          // Re-apply config to guarantee clean accel/decel profile from 0
+          steppers[index].setMaxSpeed(g_maxSpeed);
+          steppers[index].setAcceleration(g_acceleration);
+          steppers[index].move(remaining);
+        }
+      }
+    }
+
     stepper_service();
 
     if (is_motor_motion_complete(index)) {
@@ -197,6 +227,47 @@ void stepper_run_steps_batch_blocking(const StepperMove *moves, uint8_t move_cou
   }
 
   for (;;) {
+    if (g_paused) {
+      // Capture remaining steps for each motor before stopping
+      int32_t remaining[STEPPER_MOTOR_COUNT] = {};
+      for (uint8_t moveIndex = 0; moveIndex < move_count; ++moveIndex) {
+        if (!is_valid_motor(moves[moveIndex].motor_number) || moves[moveIndex].steps <= 0) continue;
+        const uint8_t motorIndex = idx_from_motor(moves[moveIndex].motor_number);
+        remaining[motorIndex] = g_noRampMode
+          ? (runtime[motorIndex].stepRunTarget - steppers[motorIndex].currentPosition())
+          : steppers[motorIndex].distanceToGo();
+      }
+      // Immediate freeze at current positions
+      for (uint8_t i = 0; i < STEPPER_MOTOR_COUNT; ++i) {
+        steppers[i].setCurrentPosition(steppers[i].currentPosition());
+        runtime[i].stepRunActive = false;
+        runtime[i].timedRunActive = false;
+        runtime[i].infiniteRunActive = false;
+      }
+
+      while (g_paused) delay(10);
+
+      // Resume each motor from where it stopped — AccelStepper ramps from 0 to full speed
+      for (uint8_t moveIndex = 0; moveIndex < move_count; ++moveIndex) {
+        if (!is_valid_motor(moves[moveIndex].motor_number) || moves[moveIndex].steps <= 0) continue;
+        const uint8_t motorIndex = idx_from_motor(moves[moveIndex].motor_number);
+        const int32_t rem = remaining[motorIndex];
+        if (rem != 0) {
+          if (g_noRampMode) {
+            runtime[motorIndex].stepRunActive = true;
+            runtime[motorIndex].stepRunDirection = (rem > 0) ? 1 : -1;
+            runtime[motorIndex].stepRunTarget = steppers[motorIndex].currentPosition() + rem;
+            steppers[motorIndex].setSpeed((rem > 0) ? g_maxSpeed : -g_maxSpeed);
+          } else {
+            // Re-apply config to guarantee clean accel/decel profile from 0
+            steppers[motorIndex].setMaxSpeed(g_maxSpeed);
+            steppers[motorIndex].setAcceleration(g_acceleration);
+            steppers[motorIndex].move(rem);
+          }
+        }
+      }
+    }
+
     bool allComplete = true;
 
     stepper_service();

@@ -1,4 +1,5 @@
 #include "dc_motor.h"
+#include "main.h"
 
 namespace {
 constexpr uint8_t CH_DC3000_R = 0;
@@ -171,6 +172,19 @@ void dc_3000_run_ms_blocking(uint32_t time_ms, uint8_t speed, Direction directio
   dc_3000_run_ms(time_ms, speed, direction);
 
   for (;;) {
+    if (g_paused) {
+      // Capture remaining run time before stopping
+      const int32_t left = static_cast<int32_t>(dc3000.timedRunEndMs - millis());
+      const uint32_t remaining_ms = (dc3000.timedRunActive && left > 0) ? static_cast<uint32_t>(left) : 0;
+      dc_3000_stop();
+      while (g_paused) delay(10);
+      if (remaining_ms > 0) {
+        dc_3000_run_ms(remaining_ms, speed, direction);
+      } else {
+        break;
+      }
+    }
+
     dc_service();
 
     if (is_timed_motion_complete(dc3000)) {
@@ -197,6 +211,19 @@ void dc1_300_run_ms_blocking(uint32_t time_ms, uint8_t speed, Direction directio
   dc1_300_run_ms(time_ms, speed, direction);
 
   for (;;) {
+    if (g_paused) {
+      // Capture remaining run time before stopping
+      const int32_t left = static_cast<int32_t>(dc1_300.timedRunEndMs - millis());
+      const uint32_t remaining_ms = (dc1_300.timedRunActive && left > 0) ? static_cast<uint32_t>(left) : 0;
+      dc1_300_stop();
+      while (g_paused) delay(10);
+      if (remaining_ms > 0) {
+        dc1_300_run_ms(remaining_ms, speed, direction);
+      } else {
+        break;
+      }
+    }
+
     dc_service();
 
     if (is_timed_motion_complete(dc1_300)) {
@@ -223,6 +250,19 @@ void dc2_300_run_ms_blocking(uint32_t time_ms, uint8_t speed, Direction directio
   dc2_300_run_ms(time_ms, speed, direction);
 
   for (;;) {
+    if (g_paused) {
+      // Capture remaining run time before stopping
+      const int32_t left = static_cast<int32_t>(dc2_300.timedRunEndMs - millis());
+      const uint32_t remaining_ms = (dc2_300.timedRunActive && left > 0) ? static_cast<uint32_t>(left) : 0;
+      dc2_300_stop();
+      while (g_paused) delay(10);
+      if (remaining_ms > 0) {
+        dc2_300_run_ms(remaining_ms, speed, direction);
+      } else {
+        break;
+      }
+    }
+
     dc_service();
 
     if (is_timed_motion_complete(dc2_300)) {
@@ -259,6 +299,28 @@ void dc_run_ms_batch_blocking(const DcTimedMove *moves, uint8_t move_count) {
   }
 
   for (;;) {
+    if (g_paused) {
+      // Capture remaining time for each motor before stopping
+      uint32_t remaining_ms[3] = {};
+      for (uint8_t i = 0; i < move_count; ++i) {
+        DcRuntime *motor = motor_from_id(moves[i].motor);
+        if (motor == nullptr || !motor->timedRunActive) continue;
+        const int32_t left = static_cast<int32_t>(motor->timedRunEndMs - millis());
+        remaining_ms[static_cast<uint8_t>(moves[i].motor)] = (left > 0) ? static_cast<uint32_t>(left) : 0;
+      }
+      dc_stop_all();
+      while (g_paused) delay(10);
+      // Resume each motor with its remaining time
+      for (uint8_t i = 0; i < move_count; ++i) {
+        DcRuntime *motor = motor_from_id(moves[i].motor);
+        if (motor == nullptr) continue;
+        const uint32_t rem = remaining_ms[static_cast<uint8_t>(moves[i].motor)];
+        if (rem > 0) {
+          run_motor_ms(*motor, rem, moves[i].speed, moves[i].direction);
+        }
+      }
+    }
+
     dc_service();
 
     bool allComplete = true;
