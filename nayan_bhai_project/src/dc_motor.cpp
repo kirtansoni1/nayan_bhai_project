@@ -38,14 +38,36 @@ DcRuntime dc2_300 = {
   CH_DC2_300_R, CH_DC2_300_L,
 };
 
-portMUX_TYPE dcMux = portMUX_INITIALIZER_UNLOCKED;
-TaskHandle_t dcTaskHandle = nullptr;
-
 uint8_t clamp_speed(uint8_t speed) {
   if (speed > DC_PWM_MAX) {
     return DC_PWM_MAX;
   }
   return speed;
+}
+
+DcRuntime *motor_from_id(DcMotorId id) {
+  switch (id) {
+    case DcMotorId::M3000:
+      return &dc3000;
+    case DcMotorId::M1_300:
+      return &dc1_300;
+    case DcMotorId::M2_300:
+      return &dc2_300;
+    default:
+      return nullptr;
+  }
+}
+
+bool is_timed_motion_complete(const DcRuntime &motor) {
+  return !motor.timedRunActive && !motor.running;
+}
+
+void set_motor_enable(const DcRuntime &motor, bool enabled) {
+  if (&motor == &dc3000) {
+    digitalWrite(static_cast<uint8_t>(PIN_DC_3000_EN), enabled ? HIGH : LOW);
+  } else {
+    digitalWrite(static_cast<uint8_t>(PIN_DC_300_EN), enabled ? HIGH : LOW);
+  }
 }
 
 void write_motor_outputs(DcRuntime &motor) {
@@ -69,9 +91,11 @@ void stop_motor(DcRuntime &motor) {
   motor.timedRunActive = false;
   motor.speed = 0;
   write_motor_outputs(motor);
+  set_motor_enable(motor, false);
 }
 
 void run_motor(DcRuntime &motor, uint8_t speed, Direction direction) {
+  set_motor_enable(motor, true);
   motor.running = true;
   motor.timedRunActive = false;
   motor.speed = clamp_speed(speed);
@@ -85,34 +109,13 @@ void run_motor_ms(DcRuntime &motor, uint32_t time_ms, uint8_t speed, Direction d
     return;
   }
 
+  set_motor_enable(motor, true);
   motor.running = true;
   motor.timedRunActive = true;
   motor.timedRunEndMs = millis() + time_ms;
   motor.speed = clamp_speed(speed);
   motor.direction = direction;
   write_motor_outputs(motor);
-}
-
-void dc_service_task(void *parameter) {
-  (void)parameter;
-
-  for (;;) {
-    const uint32_t now = millis();
-
-    taskENTER_CRITICAL(&dcMux);
-    if (dc3000.timedRunActive && static_cast<int32_t>(now - dc3000.timedRunEndMs) >= 0) {
-      stop_motor(dc3000);
-    }
-    if (dc1_300.timedRunActive && static_cast<int32_t>(now - dc1_300.timedRunEndMs) >= 0) {
-      stop_motor(dc1_300);
-    }
-    if (dc2_300.timedRunActive && static_cast<int32_t>(now - dc2_300.timedRunEndMs) >= 0) {
-      stop_motor(dc2_300);
-    }
-    taskEXIT_CRITICAL(&dcMux);
-
-    vTaskDelay(pdMS_TO_TICKS(1));
-  }
 }
 }  // namespace
 
@@ -137,75 +140,150 @@ void dc_motor_init() {
   digitalWrite(static_cast<uint8_t>(PIN_DC_3000_EN), HIGH);
   digitalWrite(static_cast<uint8_t>(PIN_DC_300_EN), HIGH);
 
-  taskENTER_CRITICAL(&dcMux);
   stop_motor(dc3000);
   stop_motor(dc1_300);
   stop_motor(dc2_300);
-  taskEXIT_CRITICAL(&dcMux);
+}
 
-  if (dcTaskHandle == nullptr) {
-    xTaskCreatePinnedToCore(dc_service_task, "dc_task", 3072, nullptr, 2, &dcTaskHandle, 1);
+void dc_service() {
+  const uint32_t now = millis();
+
+  if (dc3000.timedRunActive && static_cast<int32_t>(now - dc3000.timedRunEndMs) >= 0) {
+    stop_motor(dc3000);
+  }
+  if (dc1_300.timedRunActive && static_cast<int32_t>(now - dc1_300.timedRunEndMs) >= 0) {
+    stop_motor(dc1_300);
+  }
+  if (dc2_300.timedRunActive && static_cast<int32_t>(now - dc2_300.timedRunEndMs) >= 0) {
+    stop_motor(dc2_300);
   }
 }
 
 void dc_3000_run(uint8_t speed, Direction direction) {
-  taskENTER_CRITICAL(&dcMux);
   run_motor(dc3000, speed, direction);
-  taskEXIT_CRITICAL(&dcMux);
 }
 
 void dc_3000_run_ms(uint32_t time_ms, uint8_t speed, Direction direction) {
-  taskENTER_CRITICAL(&dcMux);
   run_motor_ms(dc3000, time_ms, speed, direction);
-  taskEXIT_CRITICAL(&dcMux);
+}
+
+void dc_3000_run_ms_blocking(uint32_t time_ms, uint8_t speed, Direction direction) {
+  dc_3000_run_ms(time_ms, speed, direction);
+
+  for (;;) {
+    dc_service();
+
+    if (is_timed_motion_complete(dc3000)) {
+      break;
+    }
+
+    delay(0);
+  }
 }
 
 void dc_3000_stop() {
-  taskENTER_CRITICAL(&dcMux);
   stop_motor(dc3000);
-  taskEXIT_CRITICAL(&dcMux);
 }
 
 void dc1_300_run(uint8_t speed, Direction direction) {
-  taskENTER_CRITICAL(&dcMux);
   run_motor(dc1_300, speed, direction);
-  taskEXIT_CRITICAL(&dcMux);
 }
 
 void dc1_300_run_ms(uint32_t time_ms, uint8_t speed, Direction direction) {
-  taskENTER_CRITICAL(&dcMux);
   run_motor_ms(dc1_300, time_ms, speed, direction);
-  taskEXIT_CRITICAL(&dcMux);
+}
+
+void dc1_300_run_ms_blocking(uint32_t time_ms, uint8_t speed, Direction direction) {
+  dc1_300_run_ms(time_ms, speed, direction);
+
+  for (;;) {
+    dc_service();
+
+    if (is_timed_motion_complete(dc1_300)) {
+      break;
+    }
+
+    delay(0);
+  }
 }
 
 void dc1_300_stop() {
-  taskENTER_CRITICAL(&dcMux);
   stop_motor(dc1_300);
-  taskEXIT_CRITICAL(&dcMux);
 }
 
 void dc2_300_run(uint8_t speed, Direction direction) {
-  taskENTER_CRITICAL(&dcMux);
   run_motor(dc2_300, speed, direction);
-  taskEXIT_CRITICAL(&dcMux);
 }
 
 void dc2_300_run_ms(uint32_t time_ms, uint8_t speed, Direction direction) {
-  taskENTER_CRITICAL(&dcMux);
   run_motor_ms(dc2_300, time_ms, speed, direction);
-  taskEXIT_CRITICAL(&dcMux);
+}
+
+void dc2_300_run_ms_blocking(uint32_t time_ms, uint8_t speed, Direction direction) {
+  dc2_300_run_ms(time_ms, speed, direction);
+
+  for (;;) {
+    dc_service();
+
+    if (is_timed_motion_complete(dc2_300)) {
+      break;
+    }
+
+    delay(0);
+  }
 }
 
 void dc2_300_stop() {
-  taskENTER_CRITICAL(&dcMux);
   stop_motor(dc2_300);
-  taskEXIT_CRITICAL(&dcMux);
+}
+
+void dc_run_ms_batch_blocking(const DcTimedMove *moves, uint8_t move_count) {
+  if (moves == nullptr || move_count == 0) {
+    return;
+  }
+
+  bool hasValidMove = false;
+
+  for (uint8_t i = 0; i < move_count; ++i) {
+    DcRuntime *motor = motor_from_id(moves[i].motor);
+    if (motor == nullptr) {
+      continue;
+    }
+
+    hasValidMove = true;
+    run_motor_ms(*motor, moves[i].time_ms, moves[i].speed, moves[i].direction);
+  }
+
+  if (!hasValidMove) {
+    return;
+  }
+
+  for (;;) {
+    dc_service();
+
+    bool allComplete = true;
+    for (uint8_t i = 0; i < move_count; ++i) {
+      DcRuntime *motor = motor_from_id(moves[i].motor);
+      if (motor == nullptr) {
+        continue;
+      }
+
+      if (!is_timed_motion_complete(*motor)) {
+        allComplete = false;
+        break;
+      }
+    }
+
+    if (allComplete) {
+      break;
+    }
+
+    delay(0);
+  }
 }
 
 void dc_stop_all() {
-  taskENTER_CRITICAL(&dcMux);
   stop_motor(dc3000);
   stop_motor(dc1_300);
   stop_motor(dc2_300);
-  taskEXIT_CRITICAL(&dcMux);
 }
