@@ -20,7 +20,7 @@ constexpr gpio_num_t PIN_DC_3000_EN = GPIO_NUM_42;
 // DC 300 RPM (independent BTS7960 control)
 constexpr gpio_num_t PIN_DC1_300_RPWM = GPIO_NUM_8;
 constexpr gpio_num_t PIN_DC1_300_LPWM = GPIO_NUM_9;
-constexpr gpio_num_t PIN_DC2_300_RPWM = GPIO_NUM_48;
+constexpr gpio_num_t PIN_DC2_300_RPWM = GPIO_NUM_38;
 constexpr gpio_num_t PIN_DC2_300_LPWM = GPIO_NUM_47;
 constexpr gpio_num_t PIN_DC_300_EN = GPIO_NUM_41;
 
@@ -38,6 +38,10 @@ constexpr gpio_num_t PIN_BTN_C3 = GPIO_NUM_21;
 
 // Solenoid relay
 constexpr gpio_num_t PIN_SOLENOID_RLY = GPIO_NUM_39;
+
+// Onboard WS2812 RGB LED
+constexpr uint8_t PIN_RGB_LED = 48;          // GPIO 48 on ESP32-S3-DevKitC-1
+constexpr uint8_t RGB_LED_BRIGHTNESS = 64;   // 0-255 (25% = comfortable indoor brightness)
 
 // -------------------- Shared constants --------------------
 constexpr uint8_t STEPPER_MOTOR_COUNT = 3;

@@ -1,9 +1,22 @@
 #include <Arduino.h>
+#include <FastLED.h>
 
 #include "button_matrix.h"
 #include "dc_motor.h"
 #include "main.h"
 #include "stepper_motor.h"
+
+static CRGB g_leds[1];
+
+void rgb_led_init() {
+  FastLED.addLeds<WS2812, PIN_RGB_LED, GRB>(g_leds, 1);
+  FastLED.setBrightness(RGB_LED_BRIGHTNESS);
+}
+
+void set_rgb_led(uint8_t r, uint8_t g, uint8_t b) {
+  g_leds[0] = CRGB(r, g, b);
+  FastLED.show();
+}
 
 // Global state definitions
 bool start_button_pressed = false;
@@ -61,6 +74,7 @@ void on_button_event(ButtonEvent event) {
     if (event.state == ButtonState::PRESSED) {
       g_paused = false;
       start_button_pressed = true;
+      set_rgb_led(0, 255, 0); // GREEN = running
     }
   }
 
@@ -70,6 +84,7 @@ void on_button_event(ButtonEvent event) {
       // Instantly stop all actuators
       stepper_all_stop();
       dc_stop_all();
+      set_rgb_led(255, 0, 0); // RED = paused
       Serial.println("[BTN] PAUSE - press A to resume");
     }
   }
@@ -81,6 +96,9 @@ void solenoid_state(SolenoidState state) {
 
 void setup() {
   Serial.begin(115200);
+
+  rgb_led_init();
+  set_rgb_led(255, 255, 255); // WHITE = waiting for start
 
   pinMode(static_cast<uint8_t>(PIN_SOLENOID_RLY), OUTPUT);
   solenoid_state(SolenoidState::OFF); // Turn OFF solenoid at startup
@@ -99,17 +117,37 @@ void setup() {
 
 void loop() {
   while(start_button_pressed){
-  dc1_300_run_ms_blocking(100, 255, Direction::CW); // Task1: Run 300 RPM DC motor1 clockwise
-  stepper_run_steps_blocking(1, 5000, Direction::CCW); // Task2: Run stepper 1 counterclockwise for 3 inch (set steps of the motor)
-  stepper_run_steps_blocking(2, 2500, Direction::CW); // Task3: Run stepper 2 clockwise for 1 inch (set steps of the motor)
-  solenoid_state(SolenoidState::ON); // Task4: Turn on the solenoid
-  dc2_300_run_ms_blocking(353, 255, Direction::CW); // Task5: Run 300 RPM DC motor2 clockwise
-  stepper_run_steps_blocking(1, 5000, Direction::CW); // Task6: Run stepper 1 clockwise for 3 inch (set steps of the motor)
-  stepper_run_steps_batch_blocking(Task7, static_cast<uint8_t>(sizeof(Task7) / sizeof(Task7[0]))); // Task7: Run Stepper 3 clockwise for 3 inch and Stepper 2 counterclockwise for 1 inch at the same time (set steps of the motor)
-  dc_3000_run_ms_blocking(210, 100, Direction::CW); // Task8: Run 3000 RPM DC motor clockwise
-  stepper_run_steps_blocking(3, 5000, Direction::CCW); // Task9: Run stepper 3 counterclockwise for 3 inch (set steps of the motor)
+  // Task1: Run 300 RPM DC motor1 clockwise
+  dc1_300_run_ms_blocking(100, 255, Direction::CW);
+
+  // Task2: Run stepper 1 counterclockwise for 3 inch (set steps of the motor)
+  stepper_run_steps_blocking(1, 5000, Direction::CCW);
+
+  // Task3: Run stepper 2 clockwise for 1 inch (set steps of the motor)
+  stepper_run_steps_blocking(2, 2500, Direction::CW);
+
+  // Task4: Turn on the solenoid
+  solenoid_state(SolenoidState::ON);
+
+  // Task5: Run 300 RPM DC motor2 clockwise
+  dc2_300_run_ms_blocking(353, 255, Direction::CW);
+
+  // Task6: Run stepper 1 clockwise for 3 inch (set steps of the motor)
+  stepper_run_steps_blocking(1, 5000, Direction::CW);
+
+  // Task7: Run Stepper 3 clockwise for 3 inch and Stepper 2 counterclockwise for 1 inch at the same time (set steps of the motor)
+  stepper_run_steps_batch_blocking(Task7, static_cast<uint8_t>(sizeof(Task7) / sizeof(Task7[0])));
+
+  // Task8: Run 3000 RPM DC motor clockwise
+  dc_3000_run_ms_blocking(210, 100, Direction::CW);
+
+  // Task9: Run stepper 3 counterclockwise for 3 inch (set steps of the motor)
+  stepper_run_steps_blocking(3, 5000, Direction::CCW);
+
+  // Task10: Turn off the solenoid and Run 300 RPM DC motor2 counterclockwise at the same time
   solenoid_state(SolenoidState::OFF); // Task10.1: Turn off the solenoid
   dc2_300_run_ms_blocking(353, 255, Direction::CCW); // Task10.2: Run 300 RPM DC motor2 counterclockwise
+
   // Small gap before repeating the sequence
   delay(1000);
   }
