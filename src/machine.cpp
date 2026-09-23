@@ -62,8 +62,8 @@ void on_stop(MachineState s) {
     set_state(MachineState::PAUSED);
     LOGLN("Paused");
   } else if (s == MachineState::HOMING) {
-    fault_set(Fault::HOME_REQUIRED);
     set_state(MachineState::STOPPED);
+    fault_set(Fault::HOME_REQUIRED);
     LOGLN("Homing stopped, press HOME again");
   }
 }
@@ -88,15 +88,17 @@ void on_sensor(MachineState s) {
   }
 
   ++g_sensor_count;
-  LOG("Sensor count %lu/%lu\n", static_cast<unsigned long>(g_sensor_count),
-      static_cast<unsigned long>(SENSOR_TRIGGER_COUNT));
+  const unsigned long count = g_sensor_count;
 
+  // Pause first, print after, so serial never delays the stop
   if (g_sensor_count >= SENSOR_TRIGGER_COUNT) {
     g_sensor_count = 0;
-    fault_set(Fault::SENSOR_LIMIT);
     set_state(MachineState::PAUSED);
+    fault_set(Fault::SENSOR_LIMIT);
     LOGLN("Sensor limit reached, paused. Press START to resume");
+    return;
   }
+  LOG("Sensor count %lu/%lu\n", count, static_cast<unsigned long>(SENSOR_TRIGGER_COUNT));
 }
 
 }  // namespace
@@ -157,8 +159,8 @@ void machine_fault_stop() {
   xSemaphoreTake(g_lock, portMAX_DELAY);
   if (g_state.load() != MachineState::STOPPED) {
     // A stopped cycle leaves the axes away from 0
-    fault_set(Fault::HOME_REQUIRED);
     set_state(MachineState::STOPPED);
+    fault_set(Fault::HOME_REQUIRED);
     LOGLN("Machine stopped on fault");
   }
   xSemaphoreGive(g_lock);

@@ -112,3 +112,15 @@ constexpr uint32_t DC_3000_RUN_MS = 210;
 constexpr uint8_t DC_3000_SPEED = 255;
 
 constexpr uint32_t CYCLE_GAP_MS = 1000;  // pause between two cycles
+
+// -------------------- Sanity checks --------------------
+static_assert(SENSOR_TRIGGER_COUNT > 0, "SENSOR_TRIGGER_COUNT must be at least 1");
+static_assert(STEPPER_PULSE_WIDTH_US >= 3, "DM542 needs a step pulse of at least 2.5 us");
+static_assert(STEPPER_DIR_SETUP_US >= 5, "DM542 needs DIR at least 5 us before STEP");
+static_assert(DC_PWM_FREQ_HZ <= 25000, "BTN7960B PWM is limited to 25 kHz");
+static_assert(S_M1_STROKE_STEPS > 0 && S_M2_STROKE_STEPS > 0 && S_M3_STROKE_STEPS > 0,
+              "stroke steps must be positive");
+static_assert(STEPPER_MAX_SPEED > 0.0f && STEPPER_ACCEL > 0.0f, "stepper speed and accel must be positive");
+static_assert(EXIO_SOLENOID_RLY < 16 && EXIO_DC_3000_EN < 16 && EXIO_DC1_300_EN < 16 &&
+              EXIO_DC2_300_EN < 16 && EXIO_S_M1_EN < 16 && EXIO_S_M2_EN < 16 && EXIO_S_M3_EN < 16,
+              "expander pins are 0..15");

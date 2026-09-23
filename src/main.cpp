@@ -45,6 +45,10 @@ void check_reset_reason() {
 }  // namespace
 
 void setup() {
+  // TCA9535 has no reset pin and keeps its outputs across an ESP32 reset,
+  // so force solenoid and drivers off before anything else
+  io_expander_init();
+
   LOG_BEGIN(115200);
 
   indicator_init();

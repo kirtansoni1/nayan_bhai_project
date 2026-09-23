@@ -57,7 +57,7 @@ void print_positions(const char *label) {
 
 }  // namespace
 
-// Update this fnction if you want to edit the Machine Run Sequence.
+// Update this function to edit the machine run sequence.
 bool sequence_run_cycle() {
   return
     // 1. DC1 300 RPM CW
