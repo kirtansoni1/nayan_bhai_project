@@ -13,8 +13,8 @@ struct StepperMove {
 };
 
 /**
- * Sets up step/dir pins and enables the drivers. Position of every motor = 0.
- * Requires io_expander_init().
+ * Sets up step/dir pins. Position of every motor = 0.
+ * Drivers are enabled by io_expander_init() at boot and never toggled.
  */
 void stepper_init();
 
@@ -24,11 +24,6 @@ void stepper_init();
  * @param acceleration steps/s^2, or -1 to run at constant speed with no ramp
  */
 void stepper_set_config(float speed, float acceleration);
-
-/**
- * Enables or disables all three DM542 drivers.
- */
-void stepper_enable(bool enabled);
 
 /**
  * Moves one motor and blocks until done. Pauses and resumes with the machine.

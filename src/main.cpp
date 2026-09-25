@@ -66,6 +66,14 @@ void setup() {
 }
 
 void loop() {
+  // Prove the expander pins (driver enables, solenoid) still hold their levels.
+  // Runs between cycles and while idle, never during a move.
+  static uint32_t last_check = 0;
+  if (millis() - last_check >= IO_EXPANDER_CHECK_MS) {
+    last_check = millis();
+    io_expander_check();
+  }
+
   // Expander lost: motion already halted by the run gate, make it final
   if (fault_active(Fault::IO_EXPANDER) && machine_state() != MachineState::STOPPED) {
     dc_stop_all();

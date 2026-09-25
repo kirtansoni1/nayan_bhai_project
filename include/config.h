@@ -70,6 +70,10 @@ constexpr float STEPPER_ACCEL = 8000.0f;       // steps/s^2, same rate used to d
 // 0 = freeze instantly (can lose steps at speed, position tracking may drift).
 constexpr float STEPPER_HALT_DECEL = 32000.0f;
 
+// Log a warning when the step loop stalls this long during a move (debug builds).
+// Fastest step interval at STEPPER_MAX_SPEED is 1e6 / 12000 = 83 us.
+constexpr uint32_t STEPPER_GAP_WARN_US = 50;
+
 // -------------------- Solenoid relay --------------------
 constexpr bool SOLENOID_ACTIVE_HIGH = true;
 
@@ -85,6 +89,9 @@ constexpr uint32_t ERR_BLINK_PAUSE_MS = 1500;
 
 // I2C write attempts before the expander is declared faulty
 constexpr uint8_t IO_EXPANDER_WRITE_TRIES = 3;
+
+// Interval for reading the expander pins back while idle or between cycles
+constexpr uint32_t IO_EXPANDER_CHECK_MS = 500;
 
 // -------------------- Buttons and sensor --------------------
 constexpr uint8_t PIN_BTN_START = 16;
