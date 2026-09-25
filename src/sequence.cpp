@@ -78,6 +78,7 @@ bool sequence_run_cycle() {
     dc_run_ms_blocking(DcMotorId::DC_3000, DC_3000_RUN_MS, DC_3000_SPEED, Direction::CW) &&
     // 9. Stepper 3 CCW 3 inch
     stepper_run_steps_blocking(3, S_M3_STROKE_STEPS, Direction::CCW) &&
+    wait_ms(800) &&
     // 10. Solenoid OFF and DC2 300 RPM CCW together
     set_solenoid(false) &&
     dc_run_ms_blocking(DcMotorId::DC2_300, DC2_300_RUN_MS, DC2_300_SPEED, Direction::CCW) &&
