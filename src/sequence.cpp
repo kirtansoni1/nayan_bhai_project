@@ -14,7 +14,7 @@ namespace {
 // Step 7: stepper 3 CW 3 inch and stepper 2 CCW 1 inch together
 const StepperMove kStep7[] = {
   {3, S_M3_STROKE_STEPS, Direction::CCW},
-  {2, S_M2_STROKE_STEPS, Direction::CCW},
+  {2, S_M2_STROKE_STEPS, Direction::CW},
 };
 constexpr uint8_t kStep7Count = sizeof(kStep7) / sizeof(kStep7[0]);
 
@@ -63,24 +63,26 @@ bool sequence_run_cycle() {
     // 1. DC1 300 RPM CW
     dc_run_ms_blocking(DcMotorId::DC1_300, DC1_300_RUN_MS, DC1_300_SPEED, Direction::CW) &&
     // 2. Stepper 1 CCW 3 inch
-    stepper_run_steps_blocking(1, S_M1_STROKE_STEPS, Direction::CCW) &&
+    stepper_run_steps_blocking(1, S_M1_STROKE_STEPS, Direction::CW) &&
     // 3. Stepper 2 CW 1 inch
-    stepper_run_steps_blocking(2, S_M2_STROKE_STEPS, Direction::CW) &&
+    stepper_run_steps_blocking(2, S_M2_STROKE_STEPS, Direction::CCW) &&
     // 4. Solenoid ON
     set_solenoid(true) &&
     // 5. DC2 300 RPM CW
-    dc_run_ms_blocking(DcMotorId::DC2_300, DC2_300_RUN_MS, DC2_300_SPEED, Direction::CW) &&
+    dc_run_ms_blocking(DcMotorId::DC2_300, DC2_300_RUN_MS, DC2_300_SPEED, Direction::CCW) &&
     // 6. Stepper 1 CW 3 inch
-    stepper_run_steps_blocking(1, S_M1_STROKE_STEPS, Direction::CW) &&
+    stepper_run_steps_blocking(1, S_M1_STROKE_STEPS, Direction::CCW) &&
     // 7. Stepper 3 CW 3 inch and Stepper 2 CCW 1 inch together
     stepper_run_steps_batch_blocking(kStep7, kStep7Count) &&
     // 8. DC 3000 RPM CW
     dc_run_ms_blocking(DcMotorId::DC_3000, DC_3000_RUN_MS, DC_3000_SPEED, Direction::CW) &&
+    //delay 
+    wait_ms(300) &&
     // 9. Stepper 3 CCW 3 inch
     stepper_run_steps_blocking(3, S_M3_STROKE_STEPS, Direction::CW) &&
     // 10. Solenoid OFF and DC2 300 RPM CCW together
     set_solenoid(false) &&
-    dc_run_ms_blocking(DcMotorId::DC2_300, DC2_300_RUN_MS, DC2_300_SPEED, Direction::CCW) &&
+    dc_run_ms_blocking(DcMotorId::DC2_300, DC2_300_RUN_MS, DC2_300_SPEED, Direction::CW) &&
     // Gap before the loop repeats
     wait_ms(CYCLE_GAP_MS);
 }
