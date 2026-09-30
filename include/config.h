@@ -59,20 +59,12 @@ constexpr bool S_M1_DIR_INVERT = false;
 constexpr bool S_M2_DIR_INVERT = false;
 constexpr bool S_M3_DIR_INVERT = false;
 
-// DM542 timing: PUL width >= 2.5 us, DIR must lead PUL by >= 5 us
-constexpr uint16_t STEPPER_PULSE_WIDTH_US = 5;
-constexpr uint16_t STEPPER_DIR_SETUP_US = 10;
-
 constexpr float STEPPER_MAX_SPEED = 12000.0f;  // steps/s
 constexpr float STEPPER_ACCEL = 8000.0f;       // steps/s^2, same rate used to decelerate
 
 // Deceleration used when STOP or the sensor halts a move (steps/s^2).
 // 0 = freeze instantly (can lose steps at speed, position tracking may drift).
 constexpr float STEPPER_HALT_DECEL = 32000.0f;
-
-// Log a warning when the step loop stalls this long during a move (debug builds).
-// Fastest step interval at STEPPER_MAX_SPEED is 1e6 / 12000 = 83 us.
-constexpr uint32_t STEPPER_GAP_WARN_US = 50;
 
 // -------------------- Solenoid relay --------------------
 constexpr bool SOLENOID_ACTIVE_HIGH = true;
@@ -90,9 +82,6 @@ constexpr uint32_t ERR_BLINK_PAUSE_MS = 1500;
 // I2C write attempts before the expander is declared faulty
 constexpr uint8_t IO_EXPANDER_WRITE_TRIES = 3;
 
-// Interval for reading the expander pins back while idle or between cycles
-constexpr uint32_t IO_EXPANDER_CHECK_MS = 500;
-
 // -------------------- Buttons and sensor --------------------
 constexpr uint8_t PIN_BTN_START = 16;
 constexpr uint8_t PIN_BTN_STOP = 17;
@@ -109,7 +98,7 @@ constexpr uint32_t SENSOR_TRIGGER_COUNT = 2;  // detections while running before
 // Stroke lengths in steps (3 inch on S_M1/S_M3, 1 inch on S_M2)
 constexpr int32_t S_M1_STROKE_STEPS = 5000;
 constexpr int32_t S_M2_STROKE_STEPS = 2500;
-constexpr int32_t S_M3_STROKE_STEPS = 5000;
+constexpr int32_t S_M3_STROKE_STEPS = 3200;
 
 constexpr uint32_t DC1_300_RUN_MS = 100; //miliseconds
 constexpr uint8_t DC1_300_SPEED = 255; // 0-255, 0 = stop, 255 = full speed
@@ -122,8 +111,6 @@ constexpr uint32_t CYCLE_GAP_MS = 1000;  // pause between two cycles
 
 // -------------------- Sanity checks --------------------
 static_assert(SENSOR_TRIGGER_COUNT > 0, "SENSOR_TRIGGER_COUNT must be at least 1");
-static_assert(STEPPER_PULSE_WIDTH_US >= 3, "DM542 needs a step pulse of at least 2.5 us");
-static_assert(STEPPER_DIR_SETUP_US >= 5, "DM542 needs DIR at least 5 us before STEP");
 static_assert(DC_PWM_FREQ_HZ <= 25000, "BTN7960B PWM is limited to 25 kHz");
 static_assert(S_M1_STROKE_STEPS > 0 && S_M2_STROKE_STEPS > 0 && S_M3_STROKE_STEPS > 0,
               "stroke steps must be positive");

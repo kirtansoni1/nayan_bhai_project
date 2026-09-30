@@ -13,7 +13,7 @@ namespace {
 
 // Step 7: stepper 3 CW 3 inch and stepper 2 CCW 1 inch together
 const StepperMove kStep7[] = {
-  {3, S_M3_STROKE_STEPS, Direction::CW},
+  {3, S_M3_STROKE_STEPS, Direction::CCW},
   {2, S_M2_STROKE_STEPS, Direction::CCW},
 };
 constexpr uint8_t kStep7Count = sizeof(kStep7) / sizeof(kStep7[0]);
@@ -77,8 +77,7 @@ bool sequence_run_cycle() {
     // 8. DC 3000 RPM CW
     dc_run_ms_blocking(DcMotorId::DC_3000, DC_3000_RUN_MS, DC_3000_SPEED, Direction::CW) &&
     // 9. Stepper 3 CCW 3 inch
-    stepper_run_steps_blocking(3, S_M3_STROKE_STEPS, Direction::CCW) &&
-    wait_ms(800) &&
+    stepper_run_steps_blocking(3, S_M3_STROKE_STEPS, Direction::CW) &&
     // 10. Solenoid OFF and DC2 300 RPM CCW together
     set_solenoid(false) &&
     dc_run_ms_blocking(DcMotorId::DC2_300, DC2_300_RUN_MS, DC2_300_SPEED, Direction::CCW) &&
