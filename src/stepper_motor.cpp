@@ -197,14 +197,10 @@ bool stepper_run_steps_batch_blocking(const StepperMove *moves, uint8_t move_cou
   return any ? move_blocking(active, target) : true;
 }
 
-bool stepper_home_all_blocking() {
-  bool active[STEPPER_COUNT] = {};
-  const int32_t target[STEPPER_COUNT] = {};  // home = 0
-
-  for (uint8_t i = 0; i < STEPPER_COUNT; ++i) {
-    active[i] = steppers[i].currentPosition() != 0;
+void stepper_set_zero(uint8_t motor_number) {
+  if (valid(motor_number)) {
+    steppers[motor_number - 1].setCurrentPosition(0);
   }
-  return move_blocking(active, target);
 }
 
 int32_t stepper_get_position(uint8_t motor_number) {

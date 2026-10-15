@@ -4,8 +4,8 @@
 
 // Value = number of RED blinks. Higher value = more severe, shown first.
 enum class Fault : uint8_t {
-  SENSOR_LIMIT = 1,      // sensor reached SENSOR_TRIGGER_COUNT detections
-  HOME_REQUIRED = 2,     // homing was interrupted, axes not at 0
+  SENSOR_LIMIT = 1,      // SENSOR_TRIGGER_COUNT cycles in a row saw a detection
+  SENSOR_BLOCKED = 2,    // sensor active when START was pressed
   UNEXPECTED_RESET = 3,  // brownout / crash / watchdog, tracked position lost
   IO_EXPANDER = 4,       // TCA9535 not responding, drivers cannot be controlled
 };

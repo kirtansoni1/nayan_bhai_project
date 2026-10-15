@@ -43,10 +43,9 @@ bool stepper_run_steps_blocking(uint8_t motor_number, int32_t steps, Direction d
 bool stepper_run_steps_batch_blocking(const StepperMove *moves, uint8_t move_count);
 
 /**
- * Moves all motors to position 0 together.
- * @return false if the machine aborted homing.
+ * Takes the current position of a stopped motor as 0.
  */
-bool stepper_home_all_blocking();
+void stepper_set_zero(uint8_t motor_number);
 
 /**
  * Tracked position in steps, 0 = home.

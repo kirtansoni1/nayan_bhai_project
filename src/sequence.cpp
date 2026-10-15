@@ -39,6 +39,12 @@ bool wait_ms(uint32_t ms) {
   }
 }
 
+// Opens the sensor window, never blocks the sequence
+bool open_sensor_window() {
+  run_sensor_window_open();
+  return true;
+}
+
 // Solenoid switch that respects pause, so it never toggles while stopped
 bool set_solenoid(bool on) {
   if (!run_wait_resume()) {
@@ -80,6 +86,8 @@ bool sequence_run_cycle() {
     wait_ms(300) &&
     // 9. Stepper 3 CCW 3 inch
     stepper_run_steps_blocking(3, S_M3_STROKE_STEPS, Direction::CW) &&
+    // Sensor detections count from here until the cycle ends
+    open_sensor_window() &&
     // 10. Solenoid OFF and DC2 300 RPM CCW together
     set_solenoid(false) &&
     dc_run_ms_blocking(DcMotorId::DC2_300, DC2_300_RUN_MS, DC2_300_SPEED, Direction::CW) &&
@@ -87,12 +95,13 @@ bool sequence_run_cycle() {
     wait_ms(CYCLE_GAP_MS);
 }
 
-bool sequence_home() {
+bool sequence_jog() {
   dc_stop_all();
   solenoid_set(false);
-  print_positions("Homing from");
 
-  const bool done = stepper_home_all_blocking();
-  print_positions(done ? "At home" : "Homing halted at");
+  const bool done = stepper_run_steps_blocking(3, S_M3_JOG_STEPS, S_M3_JOG_DIR);
+  print_positions(done ? "Jog done at" : "Jog stopped at");
+  stepper_set_zero(3);
+  LOGLN("S_M3 set as home");
   return done;
 }

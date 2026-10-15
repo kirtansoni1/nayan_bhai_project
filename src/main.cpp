@@ -73,19 +73,20 @@ void loop() {
   }
 
   switch (machine_state()) {
-    case MachineState::RUNNING:
+    case MachineState::RUNNING: {
       machine_set_activity(Activity::CYCLE);
-      sequence_run_cycle();
+      const bool done = sequence_run_cycle();
       machine_set_activity(Activity::NONE);
-      break;
-
-    case MachineState::HOMING: {
-      machine_set_activity(Activity::HOMING);
-      const bool done = sequence_home();
-      machine_set_activity(Activity::NONE);
-      machine_homing_finished(done);
+      machine_cycle_finished(done);
       break;
     }
+
+    case MachineState::JOGGING:
+      machine_set_activity(Activity::JOG);
+      sequence_jog();
+      machine_set_activity(Activity::NONE);
+      machine_jog_finished();
+      break;
 
     default:
       delay(10);

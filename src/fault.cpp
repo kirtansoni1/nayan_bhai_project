@@ -15,7 +15,7 @@ uint8_t fault_bit(Fault fault) {
 const char *fault_text(Fault fault) {
   switch (fault) {
     case Fault::SENSOR_LIMIT:     return "sensor count reached";
-    case Fault::HOME_REQUIRED:    return "home required";
+    case Fault::SENSOR_BLOCKED:   return "sensor blocked";
     case Fault::UNEXPECTED_RESET: return "unexpected restart";
     case Fault::IO_EXPANDER:      return "IO expander not responding";
   }
