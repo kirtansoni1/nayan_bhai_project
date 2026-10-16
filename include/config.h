@@ -112,7 +112,7 @@ constexpr uint8_t DC_3000_SPEED = 205;
 constexpr uint32_t CYCLE_GAP_MS = 500;  // pause between two cycles
 
 // HOME button (machine stopped only): S_M3 jog, its end point becomes the new S_M3 zero
-constexpr int32_t S_M3_JOG_STEPS = 200;
+constexpr int32_t S_M3_JOG_STEPS = S_M3_STROKE_STEPS;
 constexpr Direction S_M3_JOG_DIR = Direction::CW;
 
 // -------------------- Sanity checks --------------------
