@@ -98,18 +98,18 @@ constexpr uint32_t SENSOR_TRIGGER_COUNT = 2;
 
 // -------------------- Machine sequence --------------------
 // Stroke lengths in steps (3 inch on S_M1/S_M3, 1 inch on S_M2)
-constexpr int32_t S_M1_STROKE_STEPS = 3300;
-constexpr int32_t S_M2_STROKE_STEPS = 2200;
-constexpr int32_t S_M3_STROKE_STEPS = 3200;
+constexpr int32_t S_M1_STROKE_STEPS = 1550;
+constexpr int32_t S_M2_STROKE_STEPS = 990;
+constexpr int32_t S_M3_STROKE_STEPS = 1400;
 
-constexpr uint32_t DC1_300_RUN_MS = 230; //miliseconds
-constexpr uint8_t DC1_300_SPEED = 210; // 0-255, 0 = stop, 255 = full speed
-constexpr uint32_t DC2_300_RUN_MS = 220;
-constexpr uint8_t DC2_300_SPEED = 250;
-constexpr uint32_t DC_3000_RUN_MS = 195;
-constexpr uint8_t DC_3000_SPEED = 205;
+constexpr uint32_t DC1_300_RUN_MS = 250; //miliseconds
+constexpr uint8_t DC1_300_SPEED = 205; // 0-255, 0 = stop, 255 = full speed
+constexpr uint32_t DC2_300_RUN_MS = 243;
+constexpr uint8_t DC2_300_SPEED = 230;
+constexpr uint32_t DC_3000_RUN_MS = 240;
+constexpr uint8_t DC_3000_SPEED = 255;
 
-constexpr uint32_t CYCLE_GAP_MS = 500;  // pause between two cycles
+constexpr uint32_t CYCLE_GAP_MS = 000;  // pause between two cycles
 
 // HOME button (machine stopped only): S_M3 jog, its end point becomes the new S_M3 zero
 constexpr int32_t S_M3_JOG_STEPS = S_M3_STROKE_STEPS;

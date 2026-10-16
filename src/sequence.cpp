@@ -83,7 +83,7 @@ bool sequence_run_cycle() {
     // 8. DC 3000 RPM CW
     dc_run_ms_blocking(DcMotorId::DC_3000, DC_3000_RUN_MS, DC_3000_SPEED, Direction::CW) &&
     //delay 
-    wait_ms(300) &&
+    wait_ms(400) &&
     // 9. Stepper 3 CW 3 inch
     stepper_run_steps_blocking(3, S_M3_STROKE_STEPS, Direction::CW) &&
     // Sensor detections count from here until the cycle ends
