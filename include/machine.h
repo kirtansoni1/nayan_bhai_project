@@ -8,14 +8,14 @@ enum class MachineState : uint8_t {
   STOPPED,  // idle, next START begins a fresh cycle
   RUNNING,  // cycle in progress
   PAUSED,   // cycle frozen mid-way, START resumes it
-  HOMING,   // steppers returning to 0
+  JOGGING,  // HOME pressed, S_M3 moving its fixed jog
 };
 
 // What the main task is currently executing
 enum class Activity : uint8_t {
   NONE,
   CYCLE,
-  HOMING,
+  JOG,
 };
 
 /**
@@ -36,12 +36,18 @@ MachineState machine_state();
 void machine_set_activity(Activity activity);
 
 /**
+ * Main task reports the end of a cycle. Closes the sensor window and
+ * stops the machine if the sensor limit was reached.
+ * @param completed false if the cycle was aborted
+ */
+void machine_cycle_finished(bool completed);
+
+/**
+ * Main task reports the end of a jog, done or stopped.
+ */
+void machine_jog_finished();
+
+/**
  * Forces STOPPED after a fatal fault. Called by the main task.
  */
 void machine_fault_stop();
-
-/**
- * Main task reports the end of homing.
- * @param completed false if homing was interrupted
- */
-void machine_homing_finished(bool completed);

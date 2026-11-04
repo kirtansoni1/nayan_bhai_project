@@ -13,3 +13,9 @@ bool run_halted();
  * @return true to continue the current motion, false if it must be abandoned.
  */
 bool run_wait_resume();
+
+/**
+ * Starts accepting sensor detections for the current cycle.
+ * The window closes when the cycle ends.
+ */
+void run_sensor_window_open();
